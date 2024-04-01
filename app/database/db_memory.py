@@ -1,3 +1,5 @@
+import random
+
 class User:
     id: str
     name: str
@@ -24,3 +26,9 @@ def get_user_by_username(username: str):
     for user in data:
         if user.name == username:
             return user
+
+
+def create_user(username: str, password: str):
+    user = User(random.randint(2, 999999), username, password)
+    data.append(user)
+    return user
