@@ -1,0 +1,4 @@
+
+class ServerConstraits:
+    SECRET_KEY: str = "F893HF8IANSD8102ER8UQWIFSADLKN"
+    ENCRYPTION_ALG: str = "HS256"
