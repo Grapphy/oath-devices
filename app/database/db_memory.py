@@ -4,11 +4,17 @@ class User:
     id: str
     name: str
     password: str
+    oath_secret: str
+    backup_codes: list
+    mfa_enabled: bool
 
     def __init__(self, id: str, name: str, password: str):
         self.id = id
         self.name = name
         self.password = password
+        self.oath_secret = None
+        self.backup_codes = None
+        self.mfa_enabled = False
 
 
 data = [

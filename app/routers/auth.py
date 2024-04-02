@@ -1,8 +1,10 @@
 import jwt
+import pyotp
 
 from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 from database import db_memory
+from settings import ServerConstraits
 
 router = APIRouter()
 
@@ -10,6 +12,7 @@ router = APIRouter()
 class AuthenticationData(BaseModel):
     username: str
     password: str
+    code: str = None
 
 
 @router.post("/api/v1/auth")
@@ -17,11 +20,27 @@ def authenticate(authentication_data: AuthenticationData):
     db_user = db_memory.get_user_by_username(username=authentication_data.username)
 
     if db_user and db_user.password == authentication_data.password:
+        if db_user.mfa_enabled:
+            if authentication_data.code:
+                totp_device = pyotp.TOTP(db_user.oath_secret)
+                totp_code = totp_device.now()
+
+                if totp_code == authentication_data.code:
+                    return {
+                        "access_token": jwt.encode(
+                            {"id": db_user.id, "full_name": db_user.name, "mfa": True},
+                            ServerConstraits.SECRET_KEY,
+                            algorithm=ServerConstraits.ENCRYPTION_ALG
+                        )
+                    }
+            
+            raise HTTPException(status_code=401, detail="MFA is required")
+
         return {
 			"access_token": jwt.encode(
-				{"id": db_user.id, "full_name": db_user.name},
-				"128FH8ASDVHNI3NFMKSDFMKDSFSFDFSAD",
-                algorithm="HS256"
+				{"id": db_user.id, "full_name": db_user.name, "mfa": False},
+				ServerConstraits.SECRET_KEY,
+                algorithm=ServerConstraits.ENCRYPTION_ALG
 			)
 		}
     
