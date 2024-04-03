@@ -74,7 +74,6 @@ def set_authenticator_mfa(device_reg_data: DeviceRegistrationData, current_user:
     raise HTTPException(status_code=404, detail="Invalid password")
 
 
-
 @router.post("/api/v1/@me/mfa/totp/disable")
 def set_authenticator_mfa(current_user: dict = Security(verify_token_header)):
     db_user = db_memory.get_user_by_id(current_user.get("id"))
