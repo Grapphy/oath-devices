@@ -5,9 +5,8 @@ from fastapi import APIRouter, HTTPException, Security
 from fastapi.security import APIKeyHeader
 from pydantic import BaseModel
 
-from database import db_memory
-from settings import ServerConstraits
-
+from app.database import db_memory
+from app.settings import ServerConstraits
 
 
 router = APIRouter()
@@ -20,6 +19,7 @@ class DeviceRegistrationData(BaseModel):
 
 
 token_header = APIKeyHeader(name="X-Auth-Token")
+
 
 def verify_token_header(token_header: str = Security(token_header)) -> dict:
     try:
@@ -73,6 +73,22 @@ def set_authenticator_mfa(device_reg_data: DeviceRegistrationData, current_user:
 
     raise HTTPException(status_code=404, detail="Invalid password")
 
+
+
+@router.post("/api/v1/@me/mfa/totp/disable")
+def set_authenticator_mfa(current_user: dict = Security(verify_token_header)):
+    db_user = db_memory.get_user_by_id(current_user.get("id"))
+
+    if db_user.mfa_enabled:
+        if current_user.get("mfa"):
+            db_user.backup_codes = None
+            db_user.oath_secret = None
+            db_user.mfa_enabled = False
+            return {"message": "MFA has been disabled"}
+        
+        return HTTPException(status_code=403, detail="MFA is required to access this endpoint")
+    
+    return HTTPException(status_code=403, detail="You do not have MFA enabled")
 
 
 @router.get("/api/v1/@me")
