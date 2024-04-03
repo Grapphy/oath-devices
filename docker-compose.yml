@@ -1,0 +1,17 @@
+version: '3'
+
+services:
+  api-oath:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: local/api-oath
+    container_name: api-oath
+    ports:
+      - 5050:5050
+    volumes:
+      - ./app/main.py:/code/app/main.py
+    networks:
+      default:
+        aliases:
+          - api-oath.local.com
