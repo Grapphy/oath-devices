@@ -1,10 +1,10 @@
 import jwt
 import pyotp
 
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-from database import db_memory
-from settings import ServerConstraits
+from app.database import db_memory
+from app.settings import ServerConstraits
 
 router = APIRouter()
 
