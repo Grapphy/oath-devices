@@ -92,7 +92,10 @@ def set_authenticator_mfa(current_user: dict = Security(verify_token_header)):
 
 @router.get("/api/v1/@me")
 def get_self_profile(current_user: dict = Security(verify_token_header)):
+    db_user = db_memory.get_user_by_id(current_user.get("id"))
+    
     return {
-        "id": current_user.get("id"),
-        "name": current_user.get("full_name")
+        "id": db_user.id,
+        "name": db_user.name,
+        "mfa_enabled": db_user.mfa_enabled
     }
