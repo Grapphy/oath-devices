@@ -17,14 +17,14 @@ body {
     width: 400px; /* Set a fixed width */
 }
 
+.login-container label {
+    font-weight: bold;
+}
+
 h2 {
     text-align: center;
     font-size: 24px;
     margin-bottom: 20px;
-}
-
-label {
-    font-weight: bold;
 }
 
 input[type="text"],
@@ -49,4 +49,45 @@ button {
 
 button:hover {
     background-color: #0056b3;
+}
+
+.canvas-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+  
+.canvas {
+    width: 200px;
+    height: 200px; 
+}
+
+.nfa-code label {
+    display: block;
+    font: 200% sans-serif;
+    text-align: center;
+    font-weight: normal;
+    padding-top: 10px;
+}
+
+.nfa-code input {
+    display: block;
+    margin: 0.2em auto;
+    border: none;
+    font-family: "Consolas", ui-monospace, "Menlo", "Source Code Pro", monospace;
+    font-size: inherit;
+          
+    --gap: 0.4ch;
+    width: calc(6*(var(--gap) + 1ch));
+    letter-spacing: var(--gap);
+    padding: var(--gap);
+    padding-right: 0;
+    border-radius: calc(var(--gap)/2);
+    background: linear-gradient(to right, #8888 1px 1ch, transparent 0) content-box center left / calc(1ch + var(--gap)) 1em repeat-x;
+}
+
+.nfa-code *,
+.nfa-code::after,
+.nfa-code::before {
+  box-sizing: content-box; /* or 'border-box' depending on your preference */
 }
