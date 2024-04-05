@@ -4,7 +4,6 @@ function displayAlert(type, message) {
     alertContainer.innerHTML = alert;
 }
 
-
 function generateBase32Secret(length) {
     const base32Charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
     const base32Length = length;
@@ -28,7 +27,6 @@ function generateOATH(issuer, label, secret) {
         secret: OTPAuth.Secret.fromBase32(secret)
     });
 }
-
 
 function displayProfile(access_token) {
     document.getElementById("login-container").hidden = true;
@@ -119,7 +117,6 @@ document.getElementById("loginForm").addEventListener("submit", function(event) 
         displayAlert("danger", "Error:", error);
     });
 });
-
 
 document.getElementById("profile-container").querySelector("#enable-mfa").addEventListener("click", function(event) {
     console.log("do somethiunig");
