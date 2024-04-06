@@ -20,7 +20,7 @@
         <form id="loginForm">
             <div id="alertContainer" class="mt-3"></div>
             <label for="username">Username:</label><br>
-            <input type="text" id="username" name="username"><br>
+            <input type="text" id="username" name="username" autocomplete="off"><br>
             <label for="password">Password:</label><br>
             <input type="password" id="password" name="password"><br><br>
             <button type="submit">Login</button>
@@ -46,7 +46,7 @@
         </div>
 
         <label class="nfa-code">Enter the code from your authenticator app
-            <input class="nfa-code" name="2fa-code" inputmode="numeric" maxlength="6"/>
+            <input class="nfa-code" name="2fa-code" inputmode="numeric" maxlength="6" autocomplete="off" />
         </label>
         <button id="submit-mfa">
             <span class="fa-solid fa-lock" style="padding-right: 6px;"></span> Activate

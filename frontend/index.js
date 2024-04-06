@@ -30,13 +30,11 @@ function generateOATH(issuer, label, secret) {
 }
 
 
-function displayProfile(access_token) {
-    document.getElementById("login-container").hidden = true;
-    
+function displayProfile() {
     fetch("http://localhost:5050/api/v1/@me", {
         method: "GET",
         headers: {
-            "X-Auth-Token": access_token
+            "X-Auth-Token": localStorage.getItem("access_token")
         }
     })
     .then(response => {
@@ -62,7 +60,8 @@ function registerOATHDevice(code, secret, password) {
     fetch("http://localhost:5050/api/v1/@me/mfa/totp/enable", {
         method: "POST",
         headers: {
-            "X-Auth-Token": access_token
+            "Content-Type": "application/json",
+            "X-Auth-Token": localStorage.getItem("access_token")
         },
         body: JSON.stringify({
             password: password,
@@ -72,12 +71,14 @@ function registerOATHDevice(code, secret, password) {
     })
     .then(response => {
         if (!response.ok) {
-            console.log("Failure");
+            throw new Error("MFA step up failure");
         }
         return response.json();
     })
     .then(data => {
         console.log("backup_codes: " + data.backup_codes);
+        document.getElementById("mfa-step-up-container").hidden = true;
+        displayProfile();
     })
     .catch(error => {
         console.log(error);
@@ -85,8 +86,8 @@ function registerOATHDevice(code, secret, password) {
 }
 
 
-document.getElementById("loginForm").addEventListener("submit", function(event) {
-    event.preventDefault(); // Prevent the form from submitting normally
+document.getElementById("loginForm").addEventListener("submit", async (e) => {
+    e.preventDefault(); // Prevent the form from submitting normally
 
     // Get the values from the form
     var username = document.getElementById("username").value;
@@ -99,40 +100,71 @@ document.getElementById("loginForm").addEventListener("submit", function(event) 
     });
 
     // Make a POST request to the API endpoint
-    fetch("http://localhost:5050/api/v1/auth", {
+    let response = await fetch("http://localhost:5050/api/v1/auth", {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
         },
         body: requestBody
-    })
-    .then(response => {
-        if (!response.ok) {
-            displayAlert("danger", "Login failed.");
-        }
-        return response.json();
-    })
-    .then(data => {
-        displayProfile(data.access_token);
-    })
-    .catch(error => {
-        displayAlert("danger", "Error:", error);
     });
+    
+    let data = await response.json();
+
+    if (!response.ok) {
+        if (data.detail.includes("MFA is required")) {
+            let code = prompt("Enter OTP code");
+
+            // Construct the request body
+            requestBody = JSON.stringify({
+                username: username,
+                password: password,
+                code: code
+            });
+
+            // Make a POST request to the API endpoint
+            response = await fetch("http://localhost:5050/api/v1/auth", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: requestBody
+            });
+
+            if (!response.ok) {
+                displayAlert("danger", "Invalid MFA code");
+                return;
+            }
+
+            data = await response.json();
+
+        } else {
+            displayAlert("danger", "Invalid credentials");
+            return;
+        }
+    }
+
+    localStorage.setItem("access_token", data.access_token);
+    document.getElementById("login-container").hidden = true;
+    displayProfile();
 });
 
 
 document.getElementById("profile-container").querySelector("#enable-mfa").addEventListener("click", function(event) {
-    console.log("do somethiunig");
+    let mfaStepUpContainer = document.getElementById("mfa-step-up-container");
 
     document.getElementById("profile-container").hidden = true;
-    document.getElementById("mfa-step-up-container").hidden = false;
+    mfaStepUpContainer.hidden = false;
     
     let secret = generateBase32Secret(32)
     let otpmfa = generateOATH("MyApp", "Robert", secret);
     
     const qr = new QRious({
-        element: document.getElementById("mfa-step-up-container").querySelector('#qrcode'),
+        element: mfaStepUpContainer.querySelector('#qrcode'),
         value: otpmfa.toString(),
         size: 400
+    });
+
+    mfaStepUpContainer.querySelector("#submit-mfa").addEventListener("click", function(event) {
+        registerOATHDevice(otpmfa.generate(), secret, "test123");
     });
 })
