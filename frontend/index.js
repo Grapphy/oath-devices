@@ -4,7 +4,6 @@ function displayAlert(type, message) {
     alertContainer.innerHTML = alert;
 }
 
-
 function generateBase32Secret(length) {
     const base32Charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
     const base32Length = length;
@@ -85,7 +84,6 @@ function registerOATHDevice(code, secret, password) {
     });
 }
 
-
 document.getElementById("loginForm").addEventListener("submit", async (e) => {
     e.preventDefault(); // Prevent the form from submitting normally
 
@@ -99,7 +97,6 @@ document.getElementById("loginForm").addEventListener("submit", async (e) => {
         password: password
     });
 
-    // Make a POST request to the API endpoint
     let response = await fetch("http://localhost:5050/api/v1/auth", {
         method: "POST",
         headers: {

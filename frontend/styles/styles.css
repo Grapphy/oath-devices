@@ -27,6 +27,10 @@ h2 {
     margin-bottom: 20px;
 }
 
+label {
+    font-weight: bold;
+}
+
 input[type="text"],
 input[type="password"] {
     width: 100%;
