@@ -15,3 +15,20 @@ services:
       default:
         aliases:
           - api-oath.local.com
+  
+  mysql:
+    image: mysql:latest
+    container_name: api-mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: secret
+      MYSQL_DATABASE: demo_oath
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./volumes/mysql:/var/lib/mysql
+      - ./sql:/docker-entrypoint-initdb.d
+    networks:
+      default:
+        aliases:
+          - mysqldb.local.com

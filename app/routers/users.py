@@ -1,11 +1,14 @@
 import jwt
 import pyotp
 
-from fastapi import APIRouter, HTTPException, Security
+from fastapi import APIRouter, HTTPException, Security, Depends
 from fastapi.security import APIKeyHeader
 from pydantic import BaseModel
+from sqlalchemy.orm import Session
 
-from app.database import db_memory
+# from app.database import db_memory
+from ..dependencies import get_db
+from ..database.db_sql import get_user_by_id
 from app.settings import ServerConstraits
 
 
@@ -32,8 +35,8 @@ def verify_token_header(token_header: str = Security(token_header)) -> dict:
 
 
 @router.get("/api/v1/users/{user_id}")
-def get_user_profile(user_id: str):
-    db_user = db_memory.get_user_by_id(user_id=user_id)
+def get_user_profile(user_id: str, db: Session = Depends(get_db)):
+    db_user = get_user_by_id(db, user_id=user_id)
 
     if db_user:
         return {
@@ -45,8 +48,8 @@ def get_user_profile(user_id: str):
 
 
 @router.post("/api/v1/@me/mfa/totp/enable")
-def set_authenticator_mfa(device_reg_data: DeviceRegistrationData, current_user: dict = Security(verify_token_header)):
-    db_user = db_memory.get_user_by_id(current_user.get("id"))
+def set_authenticator_mfa(device_reg_data: DeviceRegistrationData, current_user: dict = Security(verify_token_header), db: Session = Depends(get_db)):
+    db_user = get_user_by_id(db, current_user.get("id"))
 
     if db_user.password == device_reg_data.password:
 
@@ -75,8 +78,8 @@ def set_authenticator_mfa(device_reg_data: DeviceRegistrationData, current_user:
 
 
 @router.post("/api/v1/@me/mfa/totp/disable")
-def set_authenticator_mfa(current_user: dict = Security(verify_token_header)):
-    db_user = db_memory.get_user_by_id(current_user.get("id"))
+def set_authenticator_mfa(current_user: dict = Security(verify_token_header), db: Session = Depends(get_db)):
+    db_user = get_user_by_id(db, current_user.get("id"))
 
     if db_user.mfa_enabled:
         if current_user.get("mfa"):
@@ -91,8 +94,8 @@ def set_authenticator_mfa(current_user: dict = Security(verify_token_header)):
 
 
 @router.get("/api/v1/@me")
-def get_self_profile(current_user: dict = Security(verify_token_header)):
-    db_user = db_memory.get_user_by_id(current_user.get("id"))
+def get_self_profile(current_user: dict = Security(verify_token_header), db: Session = Depends(get_db)):
+    db_user = get_user_by_id(db, current_user.get("id"))
     
     return {
         "id": db_user.id,
