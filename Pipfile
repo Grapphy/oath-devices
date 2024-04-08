@@ -9,6 +9,8 @@ uvicorn = {extras = ["standard"], version = "*"}
 python-multipart = "*"
 pyjwt = "*"
 pyotp = "*"
+sqlalchemy = "*"
+mysqlclient = "*"
 
 [dev-packages]
 
