@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 
 # from app.database import db_memory
 from ..dependencies import get_db
-from ..database.db_sql import get_user_by_id
+from ..database.db_sql import get_user_by_id, patch_user
 from app.settings import ServerConstraits
 
 
@@ -41,7 +41,7 @@ def get_user_profile(user_id: str, db: Session = Depends(get_db)):
     if db_user:
         return {
             "id": db_user.id,
-            "name": db_user.name
+            "username": db_user.username
         }
 
     raise HTTPException(status_code=404, detail="User does not exist")
@@ -67,6 +67,7 @@ def set_authenticator_mfa(device_reg_data: DeviceRegistrationData, current_user:
             ]
 
             db_user.mfa_enabled = True
+            patch_user(db, db_user)
 
             return {
                 "backup_codes": db_user.backup_codes
@@ -86,6 +87,7 @@ def set_authenticator_mfa(current_user: dict = Security(verify_token_header), db
             db_user.backup_codes = None
             db_user.oath_secret = None
             db_user.mfa_enabled = False
+            patch_user(db, db_user)
             return {"message": "MFA has been disabled"}
         
         return HTTPException(status_code=403, detail="MFA is required to access this endpoint")
@@ -99,6 +101,6 @@ def get_self_profile(current_user: dict = Security(verify_token_header), db: Ses
     
     return {
         "id": db_user.id,
-        "name": db_user.name,
+        "username": db_user.username,
         "mfa_enabled": db_user.mfa_enabled
     }
