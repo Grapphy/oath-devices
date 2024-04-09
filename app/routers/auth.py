@@ -34,7 +34,7 @@ def authenticate(authentication_data: AuthenticationData,  db: Session = Depends
                 if totp_code == authentication_data.code:
                     return {
                         "access_token": jwt.encode(
-                            {"id": db_user.id, "full_name": db_user.name, "mfa": True},
+                            {"id": db_user.id, "username": db_user.username, "mfa": True},
                             ServerConstraits.SECRET_KEY,
                             algorithm=ServerConstraits.ENCRYPTION_ALG
                         )
@@ -44,7 +44,7 @@ def authenticate(authentication_data: AuthenticationData,  db: Session = Depends
 
         return {
 			"access_token": jwt.encode(
-				{"id": db_user.id, "full_name": db_user.name, "mfa": False},
+				{"id": db_user.id, "username": db_user.username, "mfa": False},
 				ServerConstraits.SECRET_KEY,
                 algorithm=ServerConstraits.ENCRYPTION_ALG
 			)
@@ -60,4 +60,9 @@ def signup(authentication_data: AuthenticationData,  db: Session = Depends(get_d
     if db_user:
         raise HTTPException(status_code=403, detail="User with username {} already exists".format(authentication_data.username))
     
-    return create_user(db, username=authentication_data.username, password=authentication_data.password)
+    new_user = create_user(db, username=authentication_data.username, password=authentication_data.password)
+    return {
+        "id": new_user.id,
+        "username": new_user.username,
+        "mfa": new_user.mfa_enabled
+    }
