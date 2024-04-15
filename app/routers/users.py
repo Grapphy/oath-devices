@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 
 # from app.database import db_memory
 from ..dependencies import get_db
-from ..database.db_sql import get_user_by_id, patch_user
+from ..database.db_sql import get_user_by_id, patch_user, create_backup_codes
 from app.settings import ServerConstraits
 
 
@@ -61,16 +61,17 @@ def set_authenticator_mfa(device_reg_data: DeviceRegistrationData, current_user:
 
         if topt_code == device_reg_data.code:
             db_user.oath_secret = device_reg_data.secret
-            db_user.backup_codes = [
+            backup_codes = [
                 pyotp.random_base32()
                 for _ in range(5)
             ]
 
+            create_backup_codes(db, db_user.id, backup_codes)
             db_user.mfa_enabled = True
             patch_user(db, db_user)
 
             return {
-                "backup_codes": db_user.backup_codes
+                "backup_codes": backup_codes
             }
         
         raise HTTPException(status_code=404, detail="OTP code does not match")
