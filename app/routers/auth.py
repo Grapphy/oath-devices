@@ -7,10 +7,8 @@ from sqlalchemy.orm import Session
 
 
 # from app.database import db_memory
-from ..dependencies import get_db
-from ..database.db_sql import (get_user_by_username, create_user)
-
-from app.settings import ServerConstraits
+from ..dependencies import get_db, generate_user_token
+from ..database.db_sql import (get_user_by_username, create_user, get_backup_code, delete_backup_code)
 
 router = APIRouter()
 
@@ -19,6 +17,7 @@ class AuthenticationData(BaseModel):
     username: str
     password: str
     code: str = None
+    backup_code: str = None
 
 
 @router.post("/api/v1/auth")
@@ -30,25 +29,21 @@ def authenticate(authentication_data: AuthenticationData,  db: Session = Depends
             if authentication_data.code:
                 totp_device = pyotp.TOTP(db_user.oath_secret)
                 totp_code = totp_device.now()
-
                 if totp_code == authentication_data.code:
-                    return {
-                        "access_token": jwt.encode(
-                            {"id": db_user.id, "username": db_user.username, "mfa": True},
-                            ServerConstraits.SECRET_KEY,
-                            algorithm=ServerConstraits.ENCRYPTION_ALG
-                        )
-                    }
+                    return generate_user_token(db_user=db_user, is_mfa=True)
+                else:
+                    raise HTTPException(status_code=401, detail="Invalid OTP code")
+            elif authentication_data.backup_code:
+                backup_code = get_backup_code(db, backup_code=authentication_data.backup_code)
+                if backup_code and backup_code.user_id == db_user.id:
+                    delete_backup_code(db, backup_code=backup_code)
+                    return generate_user_token(db_user=db_user, is_mfa=True)
+                else:
+                    raise HTTPException(status_code=401, detail="Invalid backup code")
             
             raise HTTPException(status_code=401, detail="MFA is required")
 
-        return {
-			"access_token": jwt.encode(
-				{"id": db_user.id, "username": db_user.username, "mfa": False},
-				ServerConstraits.SECRET_KEY,
-                algorithm=ServerConstraits.ENCRYPTION_ALG
-			)
-		}
+        return generate_user_token(db_user=db_user)
     
     raise HTTPException(status_code=401, detail="Invalid credentials")
 
