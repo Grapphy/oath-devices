@@ -91,3 +91,13 @@ button:hover {
 .nfa-code::before {
   box-sizing: content-box; /* or 'border-box' depending on your preference */
 }
+
+
+.backup-codes {
+    list-style: none;
+    padding: 0;
+}
+.backup-code {
+    margin-bottom: 5px;
+    font-family: monospace;
+}

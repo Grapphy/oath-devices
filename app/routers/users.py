@@ -5,6 +5,7 @@ from fastapi import APIRouter, HTTPException, Security, Depends
 from fastapi.security import APIKeyHeader
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
+from datetime import datetime
 
 # from app.database import db_memory
 from ..dependencies import get_db
@@ -27,6 +28,10 @@ token_header = APIKeyHeader(name="X-Auth-Token")
 def verify_token_header(token_header: str = Security(token_header)) -> dict:
     try:
         decoded_token = jwt.decode(token_header, ServerConstraits.SECRET_KEY, algorithms=ServerConstraits.ENCRYPTION_ALG)
+        current_time = datetime.utcnow()
+        expiration_time = datetime.utcfromtimestamp(decoded_token.get("expiration"))
+        if current_time > expiration_time:
+           raise HTTPException(status_code=403, detail="Expired token")
         return decoded_token
     except jwt.ExpiredSignatureError:
         raise HTTPException(status_code=403, detail="Invalid token signature")
