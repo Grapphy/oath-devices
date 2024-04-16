@@ -35,7 +35,8 @@
             <label class="nfa-code">Enter the code from your authenticator app
                 <input class="nfa-code" name="nfa-code" inputmode="numeric" maxlength="6" autocomplete="off" />
             </label>
-            <button type="submit">Submit</button>
+            <button type="submit" id="submit_code">Submit</button>
+            <button type="submit" id="submit_backup_code" style="margin-top: 10px;">Use backup code</button>
         </form>
     </div>
 
@@ -65,6 +66,19 @@
         </label>
         <button id="submit-mfa">
             <span class="fa-solid fa-lock" style="padding-right: 6px;"></span> Activate
+        </button>
+    </div>
+
+    <div id="mfa-backup-codes-container" class="login-container" hidden>
+        <h2><i class="fa-solid fa-lock" style="padding-right: 8px;"></i>Don't get locked</h2>
+        <p>Save your backup codes in case you lose your authenticator</p>
+        <p>We will only show you this once</p>
+
+        <ul id="backup-codes-list" class="backup-codes">
+        </ul>
+
+        <button id="mfa-continue-button">
+            <span class="fa-solid fa-lock" style="padding-right: 6px;"></span> Continue
         </button>
     </div>
 

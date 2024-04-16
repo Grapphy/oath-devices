@@ -47,13 +47,15 @@ function displayProfile() {
         var profileContainer = document.getElementById("profile-container");
         profileContainer.hidden = false;
         profileContainer.querySelector("#userId").textContent = data.id;
-        profileContainer.querySelector("#username").textContent = data.name;
+        profileContainer.querySelector("#username").textContent = data.username;
 
         if (data.mfa_enabled === true) {
             profileContainer.querySelector("#mfa-status").textContent = "Enabled";
             profileContainer.querySelector("#mfa-status").style.color = 'green';
             profileContainer.querySelector("#mfa-toggle-button").innerHTML = '<span class="fa-solid fa-lock" style="padding-right: 6px;"></span> Disable Authenticator';
-            profileContainer.querySelector("#mfa-toggle-button").onclick = disableOATHDevice;
+            profileContainer.querySelector("#mfa-toggle-button").onclick =  () => {
+                disableOATHDevice();
+            }
         } else {
             profileContainer.querySelector("#mfa-status").textContent = "Disabled";
             profileContainer.querySelector("#mfa-status").style.color = 'red';
@@ -64,15 +66,16 @@ function displayProfile() {
                 mfaStepUpContainer.hidden = false;
                 
                 let secret = generateBase32Secret(32)
-                let otpmfa = generateOATH("Demo OATH", data.name, secret);
+                let otpmfa = generateOATH("Demo OATH", data.username, secret);
                 const qr = new QRious({
                     element: mfaStepUpContainer.querySelector('#qrcode'),
                     value: otpmfa.toString(),
                     size: 400
                 });
                 mfaStepUpContainer.querySelector("#submit-mfa").addEventListener("click", function(event) {
+                    var password = prompt("Enter your password");
                     var code = mfaStepUpContainer.querySelector('input[name="nfa-code"]').value;
-                    registerOATHDevice(code, secret, "test123");
+                    registerOATHDevice(code, secret, password);
                 });
             }
         }
@@ -87,6 +90,26 @@ function displayProfile() {
         localStorage.removeItem("access_token");
         window.location.href = '/';
     });
+}
+
+
+function displayBackupCodes(codes) {
+    backup_codes_container = document.getElementById("mfa-backup-codes-container");
+    backup_codes_container.hidden = false;
+
+    var backupCodesList = backup_codes_container.querySelector('ul');
+
+    codes.forEach(function(code, index) {
+        var li = document.createElement('li');
+        li.className = 'backup-code';
+        li.textContent = 'Code ' + (index + 1) + ': ' + code;
+        backupCodesList.appendChild(li);
+    });
+    
+    backup_codes_container.querySelector("#mfa-continue-button").onclick = () => {
+        backup_codes_container.hidden = true;
+        displayProfile();
+    }
 }
 
 
@@ -110,9 +133,9 @@ function registerOATHDevice(code, secret, password) {
         return response.json();
     })
     .then(data => {
-        console.log("backup_codes: " + data.backup_codes);
         document.getElementById("mfa-step-up-container").hidden = true;
-        displayProfile();
+        displayBackupCodes(data.backup_codes);
+        //displayProfile();
     })
     .catch(error => {
         console.log(error);
@@ -169,14 +192,23 @@ document.getElementById("loginForm").addEventListener("submit", async (e) => {
             document.getElementById("mfaForm").addEventListener("submit", async(e) => {
                 e.preventDefault();
 
-                var code = document.getElementsByName("nfa-code")[0].value;
+                var requestBody;
 
-                // Construct the request body
-                requestBody = JSON.stringify({
-                    username: username,
-                    password: password,
-                    code: code
-                });
+                if (e.submitter === document.getElementById("submit_code")) {
+                    var code = document.getElementsByName("nfa-code")[0].value;
+                    requestBody = JSON.stringify({
+                        username: username,
+                        password: password,
+                        code: code
+                    });
+                } else if (e.submitter === document.getElementById("submit_backup_code")) {
+                    var bcode = prompt("Enter backup code");
+                    requestBody = JSON.stringify({
+                        username: username,
+                        password: password,
+                        backup_code: bcode
+                    });
+                }
 
                 // Make a POST request to the API endpoint
                 response = await fetch("http://localhost:5050/api/v1/auth", {

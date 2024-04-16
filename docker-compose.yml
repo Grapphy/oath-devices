@@ -32,3 +32,17 @@ services:
       default:
         aliases:
           - mysqldb.local.com
+  
+  frontend:
+    build:
+      context: ./frontend/
+      dockerfile: Dockerfile
+    container_name: frontend-oath
+    command: npx serve
+    ports:
+      - "3000:3000"
+    networks:
+      default:
+        aliases:
+          - oath.frontend.local.com
+    
